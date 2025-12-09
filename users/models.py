@@ -24,3 +24,41 @@ class UserManager(BaseUserManager):
             raise ValueError('У суперпользователя is_superuser=True')
 
         return self.create_user(email, password, **extra_fields)
+
+
+class User(AbstractUser, PermissionsMixin):
+    class Roles(models.TextChoices):
+
+        BUYER = 'buyer', 'Покупатель'
+        SELLER = 'seller', 'Продавец'
+        ADMIN = 'admin', 'Администратор'
+
+    email = models.EmailField(unique=True)
+    full_name = models.CharField(max_length=255)
+
+    role = models.CharField(
+        max_length=20,
+        choices=Roles.choices,
+        default=Roles.BUYER,
+    )
+
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['full_name']
+
+    def __str__(self):
+        return f'{self.email} - {self.role}'
+
+    @property
+    def is_seller(self):
+        return self.role == self.Roles.SELLER
+
+    @property
+    def is_buyer(self):
+        return self.role == self.Roles.BUYER
