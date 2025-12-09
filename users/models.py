@@ -34,6 +34,7 @@ class User(AbstractUser, PermissionsMixin):
         ADMIN = 'admin', 'Администратор'
 
     email = models.EmailField(unique=True)
+    username = None
     full_name = models.CharField(max_length=255)
 
     role = models.CharField(
