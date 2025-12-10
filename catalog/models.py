@@ -81,3 +81,9 @@ class Specification(models.Model):
 
     def __str__(self):
         return f'{self.key}: {self.value}'
+
+'catalog/models.py'
+'catalog/admin.py'
+
+'python manage.py makemigrations'
+'python manage.py migrate'

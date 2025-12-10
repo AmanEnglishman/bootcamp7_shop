@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Кабинет продавца</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8f8f8; padding: 40px; }
+        .container { max-width: 900px; margin: auto; }
+        h2 { margin-bottom: 20px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #4CAF50;
+            color: white;
+        }
+
+        tr:hover { background: #f1f1f1; }
+
+        .actions a {
+            margin-right: 10px;
+            text-decoration: none;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .add-btn {
+            display: inline-block;
+            padding: 12px 18px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Кабинет продавца</h2>
+
+    <a href="/products/add/" class="add-btn">Добавить товар</a>
+
+    <table>
+        <tr>
+            <th>Название</th>
+            <th>Категория</th>
+            <th>Цена</th>
+            <th>Активен</th>
+            <th>Действия</th>
+        </tr>
+
+        {% for p in products %}
+        <tr>
+            <td>{{ p.title }}</td>
+            <td>{{ p.category.name }}</td>
+            <td>{{ p.price }} сом</td>
+            <td>{% if p.is_active %}Да{% else %}Нет{% endif %}</td>
+            <td class="actions">
+                <a href="/products/{{ p.id }}/edit/">Редактировать</a>
+                <a href="/products/{{ p.id }}/delete/" style="color:red;">Удалить</a>
+            </td>
+        </tr>
+        {% empty %}
+            <tr><td colspan="5" style="text-align:center;">У вас пока нет продуктов</td></tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+</body>
+</html>
