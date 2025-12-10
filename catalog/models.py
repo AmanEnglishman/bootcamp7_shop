@@ -1,51 +1,83 @@
 from django.db import models
-from random import randint
+from django.utils.text import slugify
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
 class Category(models.Model):
     name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True)
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
 
 class SubCategory(models.Model):
     name = models.CharField(max_length=100)
     parent = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
 
+    slug = models.SlugField(unique=True, blank=True)
+
     def __str__(self):
-        return f'{self.name} - {self.parent.name}'
+        return f'{self.name} ({self.parent.name})'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
 
 def product_image_upload_path(instance, filename):
-    return f'catalog/images/{instance.product.title}/{filename}'
+    # красивый путь: /products/<product_id>/<filename>
+    return f'products/{instance.product.id}/{filename}'
 
-class Images(models.Model):
-    product = models.ForeignKey('Products', on_delete=models.CASCADE)
+
+class Product(models.Model):
+    article = models.PositiveIntegerField(unique=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    made_country = models.CharField(max_length=255)
+
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_percent = models.PositiveIntegerField(default=0)  # 0–100
+
+    is_active = models.BooleanField(default=True)
+
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='products')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def final_price(self):
+        """Цена после скидки"""
+        if self.discount_percent:
+            return self.price - (self.price * self.discount_percent / 100)
+        return self.price
+
+    def __str__(self):
+        return f'{self.title} ({self.article})'
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to=product_image_upload_path)
 
     def __str__(self):
-        return f'{self.product.name} - {self.image.id}'
+        return f'Image for {self.product.title}'
+
 
 class Specification(models.Model):
-    product = models.ForeignKey('Products', on_delete=models.CASCADE, related_name='specifications')
-    specification = models.CharField(max_length=255)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='specifications')
+    key = models.CharField(max_length=255)
     value = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.product.name} - {self.specification}'
-
-
-class Products(models.Model):
-    article = models.PositiveIntegerField(default=randint(0, 999999999), unique=True)
-    price = models.DecimalField(max_digits=8, decimal_places=2)
-    title = models.CharField(max_length=255)
-    make_county = models.CharField(max_length=255)
-    discount = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    is_active = models.BooleanField(default=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.title
+        return f'{self.key}: {self.value}'
