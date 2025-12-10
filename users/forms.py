@@ -19,13 +19,16 @@ class UserRegisterForm(forms.ModelForm):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError('Пароли не совпадают')
 
+        return cleaned_data
+
     def save(self, commit=True):
-        user = super.save(commit=False)
+        user = super().save(commit=False)   # ← исправлено тут
         user.set_password(self.cleaned_data['password1'])
         user.role = 'buyer'
         if commit:
             user.save()
         return user
+
 
 
 class UserLoginForm(forms.Form):
